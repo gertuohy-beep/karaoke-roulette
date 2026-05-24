@@ -1,0 +1,10 @@
+{
+  "name": "karaoke-roulette",
+  "version": "1.0.0",
+  "description": "Karaoke roulette backend and frontend app",
+  "main": "api/karaoke-agent.js",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^0.1.1"
+  }
+}
