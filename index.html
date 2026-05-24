@@ -33,6 +33,7 @@
     position: relative;
   }
 
+  /* Scanline overlay */
   body::before {
     content: '';
     position: fixed; inset: 0;
@@ -40,6 +41,7 @@
     pointer-events: none; z-index: 9999;
   }
 
+  /* Star field */
   .stars {
     position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 0;
   }
@@ -56,6 +58,7 @@
     padding: 20px 16px 40px;
   }
 
+  /* Header */
   .header {
     text-align: center; margin-bottom: 32px; animation: fadeDown 0.8s ease;
   }
@@ -75,6 +78,7 @@
   .mic-icon { font-size: 2.5rem; animation: bounce 2s infinite; display: inline-block; }
   @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
 
+  /* Card */
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -92,6 +96,7 @@
     text-shadow: var(--glow-cyan);
   }
 
+  /* Option buttons */
   .option-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
   .option-btn {
     background: transparent;
@@ -123,6 +128,7 @@
     background: rgba(255,45,120,0.2); color: var(--neon-pink); border-color: var(--neon-pink);
   }
 
+  /* Input */
   .input-row { display: flex; gap: 10px; margin-top: 8px; }
   .neon-input {
     flex: 1;
@@ -142,6 +148,7 @@
   }
   .neon-input::placeholder { color: var(--text-dim); }
 
+  /* Buttons */
   .btn {
     padding: 12px 24px; border-radius: 10px; font-family: 'Nunito', sans-serif;
     font-size: 0.95rem; font-weight: 700; cursor: pointer;
@@ -179,6 +186,7 @@
 
   .btn-full { width: 100%; text-align: center; }
 
+  /* Thumbnail confirmation */
   .thumb-box {
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
@@ -193,12 +201,22 @@
     border: 2px solid var(--neon-pink);
     box-shadow: var(--glow-pink);
   }
-  .thumb-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
-  .thumb-channel { font-size: 0.85rem; color: var(--text-dim); }
+  .thumb-title {
+    font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px;
+  }
+  .thumb-channel {
+    font-size: 0.85rem; color: var(--text-dim);
+  }
   .thumb-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
 
-  .roulette-container { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
-  .wheel-wrap { position: relative; width: 260px; height: 260px; margin: 0 auto 20px; }
+  /* Roulette wheel */
+  .roulette-container {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0;
+  }
+  .wheel-wrap {
+    position: relative; width: 260px; height: 260px; margin: 0 auto 20px;
+  }
   .wheel-svg { animation: spin 1.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite; transform-origin: center; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .wheel-pin {
@@ -217,6 +235,7 @@
   }
   @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
 
+  /* Result karaoke card */
   .result-card {
     background: rgba(0,0,0,0.4);
     border: 2px solid var(--neon-yellow);
@@ -248,18 +267,48 @@
   }
   .yt-link:hover { background: #cc0000; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255,0,0,0.4); }
 
-  .status-msg { text-align: center; padding: 16px; color: var(--text-dim); font-size: 0.9rem; animation: pulse 1.5s infinite alternate; }
-  .error-msg { background: rgba(255,45,120,0.1); border: 1px solid var(--neon-pink); border-radius: 10px; padding: 12px 16px; color: var(--neon-pink); font-size: 0.9rem; margin-bottom: 16px; }
-  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
-  .neon-line { height: 2px; border-radius: 2px; margin: 0 auto 28px; width: 80px; background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan)); box-shadow: var(--glow-cyan); }
+  /* Status/loading */
+  .status-msg {
+    text-align: center; padding: 16px;
+    color: var(--text-dim); font-size: 0.9rem;
+    animation: pulse 1.5s infinite alternate;
+  }
 
+  .error-msg {
+    background: rgba(255,45,120,0.1);
+    border: 1px solid var(--neon-pink);
+    border-radius: 10px; padding: 12px 16px;
+    color: var(--neon-pink); font-size: 0.9rem; margin-bottom: 16px;
+  }
+
+  /* Divider */
+  .divider {
+    border: none; border-top: 1px solid var(--border); margin: 20px 0;
+  }
+
+  /* Neon decoration lines */
+  .neon-line {
+    height: 2px; border-radius: 2px; margin: 0 auto 28px;
+    width: 80px;
+    background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan));
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* Animations */
   @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes fadeUp   { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
 
   .hidden { display: none !important; }
-  .play-again { text-align: center; margin-top: 8px; }
-  .play-again p { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 12px; }
 
+  /* Play again prompt */
+  .play-again {
+    text-align: center; margin-top: 8px;
+  }
+  .play-again p {
+    font-size: 0.9rem; color: var(--text-dim); margin-bottom: 12px;
+  }
+
+  /* Search spinner */
   .search-spinner {
     display: inline-block; width: 18px; height: 18px;
     border: 2.5px solid rgba(255,255,255,0.2);
@@ -268,7 +317,10 @@
     vertical-align: middle; margin-right: 8px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .input-hint { font-size: 0.82rem; color: var(--text-dim); margin-top: 8px; }
+
+  .input-hint {
+    font-size: 0.82rem; color: var(--text-dim); margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -283,6 +335,7 @@
   </div>
   <div class="neon-line"></div>
 
+  <!-- STEP 1: Input -->
   <div class="card" id="step-input">
     <div class="card-title">🎯 Choose your style</div>
     <p style="font-size:0.9rem;color:var(--text-dim);margin-bottom:20px;">Tell us what kind of music you love and we'll spin the wheel to find your karaoke track.</p>
@@ -315,6 +368,7 @@
     </div>
   </div>
 
+  <!-- STEP 2: Confirm thumbnail -->
   <div class="card hidden" id="step-confirm">
     <div class="card-title">✅ Is this the right one?</div>
     <div class="thumb-box" id="confirm-box">
@@ -330,14 +384,17 @@
     </div>
   </div>
 
+  <!-- STEP 3: Roulette spinning -->
   <div class="card hidden" id="step-roulette">
     <div class="card-title">🎰 Spinning the wheel…</div>
     <div class="roulette-container">
       <div class="wheel-wrap">
         <div class="wheel-pin"></div>
         <svg class="wheel-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="260" height="260">
+          <!-- Roulette segments -->
           <circle cx="100" cy="100" r="98" fill="#1a1a35" stroke="#00f5ff" stroke-width="2"/>
           <g id="wheel-segments"></g>
+          <!-- Center circle -->
           <circle cx="100" cy="100" r="18" fill="#0a0a1a" stroke="#ff2d78" stroke-width="2"/>
           <text x="100" y="105" text-anchor="middle" fill="#ff2d78" font-size="10" font-family="Russo One">🎤</text>
         </svg>
@@ -346,6 +403,7 @@
     </div>
   </div>
 
+  <!-- STEP 4: Show karaoke result -->
   <div class="card hidden" id="step-result">
     <div class="card-title">🎶 Your Karaoke Track!</div>
     <div class="result-card">
@@ -353,17 +411,20 @@
       <img id="result-img" src="" alt="karaoke thumbnail" />
       <div class="result-title" id="result-title"></div>
       <div class="result-channel" id="result-channel"></div>
-      <a class="yt-link" id="result-link" href="#" target="_blank">▶ Open on YouTube</a>
+      <a class="yt-link" id="result-link" href="#" target="_blank">
+        ▶ Open on YouTube
+      </a>
     </div>
     <div class="play-again">
       <p>Ready for another spin?</p>
       <button class="btn btn-primary btn-full" onclick="playAgain()">🎰 Spin Again!</button>
     </div>
   </div>
+
 </div>
 
 <script>
-// Ambient star renderer
+// ─── Star field ───────────────────────────────────────────────────────────────
 (function() {
   const container = document.getElementById('stars');
   for (let i = 0; i < 80; i++) {
@@ -375,7 +436,7 @@
   }
 })();
 
-// SVG neon segment rendering
+// ─── Roulette wheel builder ───────────────────────────────────────────────────
 (function() {
   const colors = ['#ff2d78','#00f5ff','#ffe600','#bf5fff','#ff6b35','#00c896','#ff9f43','#48dbfb'];
   const labels = ['🎸','🎹','🥁','🎷','🎺','🎻','🎵','🎶'];
@@ -404,6 +465,7 @@
   }
 })();
 
+// ─── App state ────────────────────────────────────────────────────────────────
 let selectedOption = 1;
 let searchResults = [];
 let currentResultIndex = 0;
@@ -433,289 +495,36 @@ function setError(id, msg) {
   else { el.classList.add('hidden'); }
 }
 
-async function fetchWithRetry(url, options, retries = 3, delay = 1500) {
+// ─── Secure Server Integration Gateway ───────────────────────────────────────
+async function callClaudeJSON(prompt) {
   try {
-    const response = await fetch(url, options);
+    const response = await fetch("/api/karaoke-agent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: prompt,
+        systemPrompt: "You are a professional music database expert. Respond strictly with raw JSON matching the exact specified schema rules. Do not include markdown brackets, do not output backticks, and write no explanation prose before or after the JSON."
+      })
+    });
+
+    const data = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `Server status code ${response.status}`);
+      throw new Error(data.error || `Server Response Status: ${response.status}`);
     }
-    return response;
+
+    return extractJSON(data.text);
   } catch (error) {
-    if (retries > 0) {
-      await new Promise(res => setTimeout(res, delay));
-      return fetchWithRetry(url, options, retries - 1, delay * 2);
-    }
-    throw error;
+    console.error("Critical Connection Failure:", error);
+    throw new Error(error.message || "Failed to communicate with secure routing proxy.");
   }
 }
 
-async function callProxyServer(payload) {
-  const response = await fetchWithRetry("/api/karaoke-agent", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  const data = await response.json();
-  return data.text;
-}
+function extractJSON(text) {
+  if (!text || !text.trim()) throw new Error("Empty response from API");
 
-async function callGeminiJSON(prompt, systemPrompt, responseSchema) {
-  const textResponse = await callProxyServer({ prompt, systemPrompt, responseSchema });
-  return JSON.parse(textResponse.trim());
-}
+  // 1. Try direct parse first
+  try { return JSON.parse(text.trim()); } catch(_) {}
 
-async function startSearch() {
-  const query = document.getElementById('search-input').value.trim();
-  if (!query) { setError('step1-error', 'Please enter something first!'); return; }
-  setError('step1-error', '');
-
-  const btn = document.querySelector('#step-input .btn-primary');
-  btn.disabled = true; btn.innerHTML = '<span class="search-spinner"></span>Searching…';
-
-  try {
-    const typeLabel = selectedOption === 1 ? 'artist and song' : selectedOption === 2 ? 'artist or band' : 'song title';
-    const prompt = `Search YouTube for this ${typeLabel}: "${query}". Find the most relevant official music video or song matching this description.`;
-    const sysPrompt = "You are an automated music retrieval engine. Use Google search grounding to return valid YouTube video configurations.";
-
-    // Schema properties converted to strict lowercase types for Gemini compatibility
-    const responseSchema = {
-      type: "array",
-      description: "List containing matching search tracks details.",
-      items: {
-        type: "object",
-        properties: {
-          videoId: { type: "string", description: "The exact 11-character alphanumeric YouTube unique identifier token" },
-          title: { type: "string" },
-          channelName: { type: "string" }
-        },
-        required: ["videoId", "title", "channelName"]
-      }
-    };
-
-    const results = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!results || !Array.isArray(results) || results.length === 0) throw new Error('No items matched');
-
-    searchResults = results.map(r => ({
-      ...r,
-      thumbnailUrl: `https://img.youtube.com/vi/${r.videoId}/hqdefault.jpg`,
-      url: `https://www.youtube.com/watch?v=${r.videoId}`
-    }));
-    currentResultIndex = 0;
-    showConfirm();
-  } catch(e) {
-    setError('step1-error', 'Search failed — ' + (e.message || 'please try again.'));
-  } finally {
-    btn.disabled = false; btn.innerHTML = 'Search';
-  }
-}
-
-function showConfirm() {
-  if (currentResultIndex >= searchResults.length) {
-    setError('step2-error', 'No more results found. Please go back and try a different search.');
-    document.querySelector('.thumb-actions').innerHTML = '<button class="btn btn-secondary" onclick="goBack()">← Try Again</button>';
-    return;
-  }
-  const v = searchResults[currentResultIndex];
-  document.getElementById('confirm-img').src = v.thumbnailUrl;
-  document.getElementById('confirm-img').onerror = function() { this.src = 'https://via.placeholder.com/320x180/1a1a35/00f5ff?text=No+Preview'; };
-  document.getElementById('confirm-title').textContent = v.title;
-  document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
-  setError('step2-error', '');
-  showStep('step-confirm');
-}
-
-function confirmSelection() {
-  confirmedVideo = searchResults[currentResultIndex];
-  showStep('step-roulette');
-  findKaraokeTrack();
-}
-
-function tryAnother() {
-  currentResultIndex++;
-  if (currentResultIndex >= searchResults.length) {
-    fetchMoreResults();
-  } else {
-    showConfirm();
-  }
-}
-
-async function fetchMoreResults() {
-  const loading = document.getElementById('confirm-loading');
-  loading.classList.remove('hidden');
-  document.querySelector('.thumb-actions').style.display = 'none';
-
-  try {
-    const query = document.getElementById('search-input').value.trim();
-    const typeLabel = selectedOption === 1 ? 'artist and song' : selectedOption === 2 ? 'artist or band' : 'song title';
-    const alreadySeen = searchResults.map(r => r.videoId).join(',');
-    
-    const prompt = `Search YouTube for alternate configurations matching "${query}" (${typeLabel}). Explicitly skip these video IDs: ${alreadySeen}.`;
-    const sysPrompt = "You are an automated music retrieval engine. Use Google search grounding to find non-duplicated items.";
-
-    const responseSchema = {
-      type: "array",
-      items: {
-        type: "object",
-        properties: { videoId: { type: "string" }, title: { type: "string" }, channelName: { type: "string" } },
-        required: ["videoId", "title", "channelName"]
-      }
-    };
-
-    const moreResults = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!moreResults || !Array.isArray(moreResults) || moreResults.length === 0) throw new Error('End of listings reached');
-    
-    const enriched = moreResults.map(r => ({
-      ...r,
-      thumbnailUrl: `https://img.youtube.com/vi/${r.videoId}/hqdefault.jpg`,
-      url: `https://www.youtube.com/watch?v=${r.videoId}`
-    }));
-    searchResults = [...searchResults, ...enriched];
-    loading.classList.add('hidden');
-    document.querySelector('.thumb-actions').style.display = '';
-    showConfirm();
-  } catch(e) {
-    loading.classList.add('hidden');
-    document.querySelector('.thumb-actions').style.display = '';
-    setError('step2-error', 'Could not locate alternate tracks. Try a different query terms.');
-    document.querySelector('.thumb-actions').innerHTML = '<button class="btn btn-secondary" onclick="goBack()">← Try Again</button>';
-  }
-}
-
-function goBack() {
-  document.querySelector('.thumb-actions').innerHTML = `
-    <button class="btn btn-success" onclick="confirmSelection()">✓ Yes, that's it!</button>
-    <button class="btn btn-secondary" onclick="tryAnother()">✗ Try another</button>
-  `;
-  showStep('step-input');
-}
-
-let seenArtists = [];
-const WILDCARDS = [
-  'Pick a song from the late 1970s or early 1980s.', 'Pick a track from a female vocalist.',
-  'Pick a song that hit number 1 on charts.', 'Pick an unreleased or rare album track deep-cut.',
-  'Pick a song recorded by an ensemble or band.', 'Pick an iconic track out of the 1990s.',
-  'Pick a production by an isolated solo performer.', 'Pick a single out of the 2010s era.',
-  'Pick an anthem heavily adapted or covered by groups.', 'Pick an high tempo danceable track.',
-  'Pick a slow-tempo ballad.', 'Pick an underground niche production inside the target genre.'
-];
-
-async function findKaraokeTrack() {
-  try {
-    const v = confirmedVideo;
-    const originalArtist = v.channelName || v.title.split(' - ')[0] || v.title.split(' – ')[0];
-    seenArtists.push(originalArtist.toLowerCase());
-
-    const wildcard = WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)];
-    const avoidList = seenArtists.length > 0 ? `Do NOT under any circumstances return music by these musicians: ${seenArtists.map(a => '"' + a + '"').join(', ')}.` : '';
-
-    const prompt = `You are a music expert running a live Karaoke Roulette selection engine. The base target style context is: "${v.title}".
-    
-    INSTRUCTIONS:
-    1. Select a totally different track by a completely separate artist matching the baseline aesthetic/genre style.
-    2. ${avoidList}
-    3. You cannot suggest "${originalArtist}".
-    4. The variant track must adhere to this directive constraint: ${wildcard}
-    5. Search YouTube for an explicitly active karaoke performance version (with lyric graphics) of your final choice to map out properties.`;
-
-    const sysPrompt = "You are a professional music roulette assistant. Use grounding to locate real, playable karaoke variants on YouTube.";
-
-    const responseSchema = {
-      type: "object",
-      properties: {
-        chosenArtist: { type: "string" },
-        chosenSong: { type: "string" },
-        genre: { type: "string" },
-        videoId: { type: "string", description: "The true 11-char working YouTube ID of the karaoke edition video" },
-        title: { type: "string" },
-        channelName: { type: "string" },
-        youtubeUrl: { type: "string" }
-      },
-      required: ["chosenArtist", "chosenSong", "genre", "videoId", "title", "channelName", "youtubeUrl"]
-    };
-
-    const result = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!result || !result.videoId) throw new Error('No matching karaoke entity found');
-
-    if (result.chosenArtist) seenArtists.push(result.chosenArtist.toLowerCase());
-    result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    showResult(result);
-  } catch(e) {
-    showStep('step-result');
-    document.getElementById('result-title').textContent = 'Could not find a unique karaoke variant. Let\'s roll again!';
-    document.getElementById('result-channel').textContent = e.message || '';
-    document.getElementById('result-img').src = '';
-    document.getElementById('result-link').href = '#';
-  }
-}
-
-function showResult(track) {
-  document.getElementById('result-img').src = track.thumbnailUrl;
-  document.getElementById('result-img').onerror = function() { this.src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=🎤+Karaoke'; };
-  document.getElementById('result-title').textContent = track.title || (`${track.chosenSong} — ${track.chosenArtist}`);
-  const genreTag = track.genre ? ` • ${track.genre}` : '';
-  const artistTag = track.chosenArtist ? ` • ${track.chosenArtist}` : '';
-  document.getElementById('result-channel').textContent = '📺 ' + (track.channelName || 'YouTube') + artistTag + genreTag;
-  document.getElementById('result-link').href = track.youtubeUrl;
-  showStep('step-result');
-}
-
-const LUCKY_GENRES = ['Classic Rock', 'Pop', '80s Synth Pop', 'Country', 'R&B', 'Soul', 'Disco', 'Punk Rock', 'Heavy Metal', 'Jazz', 'Reggae', 'Hip Hop', 'Broadway Showtune', 'Funk'];
-
-async function feelingLucky() {
-  const genre = LUCKY_GENRES[Math.floor(Math.random() * LUCKY_GENRES.length)];
-  showStep('step-roulette');
-  document.querySelector('.spin-label').textContent = 'Finding a random karaoke track…';
-  try {
-    const prompt = `Provide a completely random, incredibly popular and fun karaoke track recommendation belonging explicitly inside the "${genre}" category. Search YouTube to supply active working IDs.`;
-    const sysPrompt = "You are a Karaoke host. Ground information using active lookups to isolate real YouTube video strings.";
-
-    const responseSchema = {
-      type: "object",
-      properties: {
-        chosenArtist: { type: "string" },
-        chosenSong: { type: "string" },
-        genre: { type: "string" },
-        videoId: { type: "string" },
-        title: { type: "string" },
-        channelName: { type: "string" },
-        youtubeUrl: { type: "string" }
-      },
-      required: ["chosenArtist", "chosenSong", "genre", "videoId", "title", "channelName", "youtubeUrl"]
-    };
-
-    const result = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!result || !result.videoId) throw new Error('Generation error');
-    
-    result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    showResult(result);
-  } catch(e) {
-    showStep('step-result');
-    document.getElementById('result-title').textContent = 'Could not isolate a surprise track. Give it another roll!';
-    document.getElementById('result-channel').textContent = e.message || '';
-    document.getElementById('result-img').src = '';
-    document.getElementById('result-link').href = '#';
-  }
-}
-
-function playAgain() {
-  searchResults = [];
-  currentResultIndex = 0;
-  confirmedVideo = null;
-  seenArtists = [];
-  document.getElementById('search-input').value = '';
-  setError('step1-error', '');
-  setError('step2-error', '');
-  document.querySelector('.thumb-actions').innerHTML = `
-    <button class="btn btn-success" onclick="confirmSelection()">✓ Yes, that's it!</button>
-    <button class="btn btn-secondary" onclick="tryAnother()">✗ Try another</button>
-  `;
-  showStep('step-input');
-}
-
-document.getElementById('search-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') startSearch();
-});
-</script>
-</body>
-</html>
+  // 2. Strip markdown fences
+  const stripped = text.replace(/
