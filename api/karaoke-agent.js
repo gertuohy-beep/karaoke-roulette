@@ -1,14 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Ensure your environment variable is loaded correctly
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize the Google Gen AI client safely
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export default async function handler(req, res) {
-  // Handle preflight CORS requests if applicable
+  // 1. Handle CORS Preflight requests safely
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // 2. Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -20,34 +21,39 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing prompt' });
     }
 
-    // Build model configuration parameters securely
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ error: 'Backend Configuration Error: GEMINI_API_KEY is missing from Vercel Environment Variables.' });
+    }
+
+    // 3. Set up the exact config configuration structure expected by gemini-2.5-flash
     const config = {
-      systemInstruction: systemPrompt || "You are a helpful assistant.",
+      systemInstruction: systemPrompt || "You are a professional music roulette assistant.",
       temperature: 0.7,
     };
 
-    // Explicitly enforce valid Structured JSON Mode flags 
-    // This removes the conflict causing the "Tool use" rejection
+    // 4. Attach schema rules strictly inside the configuration safely
     if (responseSchema) {
       config.responseMimeType = "application/json";
       config.responseSchema = responseSchema;
     }
 
-    // We use the reliable gemini-2.5-flash model 
-    // It fully supports structured JSON out of the box
+    // 5. Fire request using the standard official models mechanism
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: prompt,
       config: config
     });
 
-    // Send back the raw text string for the frontend to parse safely
+    // 6. Return response text to frontend
     return res.status(200).json({ text: response.text });
 
   } catch (error) {
-    console.error("Gemini API backend proxy error:", error);
+    // This logs the exact trace in your Vercel logs dashboard
+    console.error("CRITICAL BACKEND ERROR:", error);
+    
+    // Return the precise error details to the frontend so we don't blind-guess a 500
     return res.status(500).json({ 
-      error: error.message || 'Internal Server Error' 
+      error: `Server Crash details: ${error.message || 'Unknown execution error'}` 
     });
   }
 }
