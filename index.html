@@ -433,7 +433,6 @@ function setError(id, msg) {
   else { el.classList.add('hidden'); }
 }
 
-// Global retry implementation to handle serverless cold starts elegantly
 async function fetchWithRetry(url, options, retries = 3, delay = 1500) {
   try {
     const response = await fetch(url, options);
@@ -452,7 +451,6 @@ async function fetchWithRetry(url, options, retries = 3, delay = 1500) {
 }
 
 async function callProxyServer(payload) {
-  // Uses a path structure that targets Vercel/Netlify's local proxy router automatically
   const response = await fetchWithRetry("/api/karaoke-agent", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -480,22 +478,23 @@ async function startSearch() {
     const prompt = `Search YouTube for this ${typeLabel}: "${query}". Find the most relevant official music video or song matching this description.`;
     const sysPrompt = "You are an automated music retrieval engine. Use Google search grounding to return valid YouTube video configurations.";
 
+    // Schema properties converted to strict lowercase types for Gemini compatibility
     const responseSchema = {
-      type: "ARRAY",
+      type: "array",
       description: "List containing matching search tracks details.",
       items: {
-        type: "OBJECT",
+        type: "object",
         properties: {
-          videoId: { type: "STRING", description: "The exact 11-character alphanumeric YouTube unique identifier token" },
-          title: { type: "STRING" },
-          channelName: { type: "STRING" }
+          videoId: { type: "string", description: "The exact 11-character alphanumeric YouTube unique identifier token" },
+          title: { type: "string" },
+          channelName: { type: "string" }
         },
         required: ["videoId", "title", "channelName"]
       }
     };
 
     const results = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!Array.isArray(results) || results.length === 0) throw new Error('No items matched');
+    if (!results || !Array.isArray(results) || results.length === 0) throw new Error('No items matched');
 
     searchResults = results.map(r => ({
       ...r,
@@ -555,16 +554,16 @@ async function fetchMoreResults() {
     const sysPrompt = "You are an automated music retrieval engine. Use Google search grounding to find non-duplicated items.";
 
     const responseSchema = {
-      type: "ARRAY",
+      type: "array",
       items: {
-        type: "OBJECT",
-        properties: { videoId: { type: "STRING" }, title: { type: "STRING" }, channelName: { type: "STRING" } },
+        type: "object",
+        properties: { videoId: { type: "string" }, title: { type: "string" }, channelName: { type: "string" } },
         required: ["videoId", "title", "channelName"]
       }
     };
 
     const moreResults = await callGeminiJSON(prompt, sysPrompt, responseSchema);
-    if (!Array.isArray(moreResults) || moreResults.length === 0) throw new Error('End of listings reached');
+    if (!moreResults || !Array.isArray(moreResults) || moreResults.length === 0) throw new Error('End of listings reached');
     
     const enriched = moreResults.map(r => ({
       ...r,
@@ -622,15 +621,15 @@ async function findKaraokeTrack() {
     const sysPrompt = "You are a professional music roulette assistant. Use grounding to locate real, playable karaoke variants on YouTube.";
 
     const responseSchema = {
-      type: "OBJECT",
+      type: "object",
       properties: {
-        chosenArtist: { type: "STRING" },
-        chosenSong: { type: "STRING" },
-        genre: { type: "STRING" },
-        videoId: { type: "STRING", description: "The true 11-char working YouTube ID of the karaoke edition video" },
-        title: { type: "STRING" },
-        channelName: { type: "STRING" },
-        youtubeUrl: { type: "STRING" }
+        chosenArtist: { type: "string" },
+        chosenSong: { type: "string" },
+        genre: { type: "string" },
+        videoId: { type: "string", description: "The true 11-char working YouTube ID of the karaoke edition video" },
+        title: { type: "string" },
+        channelName: { type: "string" },
+        youtubeUrl: { type: "string" }
       },
       required: ["chosenArtist", "chosenSong", "genre", "videoId", "title", "channelName", "youtubeUrl"]
     };
@@ -672,15 +671,15 @@ async function feelingLucky() {
     const sysPrompt = "You are a Karaoke host. Ground information using active lookups to isolate real YouTube video strings.";
 
     const responseSchema = {
-      type: "OBJECT",
+      type: "object",
       properties: {
-        chosenArtist: { type: "STRING" },
-        chosenSong: { type: "STRING" },
-        genre: { type: "STRING" },
-        videoId: { type: "STRING" },
-        title: { type: "STRING" },
-        channelName: { type: "STRING" },
-        youtubeUrl: { type: "STRING" }
+        chosenArtist: { type: "string" },
+        chosenSong: { type: "string" },
+        genre: { type: "string" },
+        videoId: { type: "string" },
+        title: { type: "string" },
+        channelName: { type: "string" },
+        youtubeUrl: { type: "string" }
       },
       required: ["chosenArtist", "chosenSong", "genre", "videoId", "title", "channelName", "youtubeUrl"]
     };
