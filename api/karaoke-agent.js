@@ -1,14 +1,10 @@
-// api/karaoke-agent.js
-// Secure serverless backend handler to proxy requests to Gemini 2.5 Flash
+import { GoogleGenAI } from "@google/genai";
+
+// Ensure your environment variable is loaded correctly
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export default async function handler(req, res) {
-  // Set up secure Cross-Origin Resource Sharing (CORS) headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Handle preflight requests
+  // Handle preflight CORS requests if applicable
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -17,64 +13,41 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Look up your hidden API Key stored inside your server environment variables
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is missing on the hosting server.' });
-  }
-
   try {
     const { prompt, systemPrompt, responseSchema } = req.body;
 
-    // Structured production payload for Gemini with native Google Search Grounding enabled
-    const payload = {
-      contents: [
-        {
-          parts: [{ text: prompt }]
-        }
-      ],
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      tools: [
-        { google_search: {} } // Uses Google's active index to verify real YouTube videos
-      ],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing prompt' });
+    }
+
+    // Build model configuration parameters securely
+    const config = {
+      systemInstruction: systemPrompt || "You are a helpful assistant.",
+      temperature: 0.7,
     };
 
-    // If a strict validation schema is passed down, enforce it natively
+    // Explicitly enforce valid Structured JSON Mode flags 
+    // This removes the conflict causing the "Tool use" rejection
     if (responseSchema) {
-      payload.generationConfig.responseSchema = responseSchema;
+      config.responseMimeType = "application/json";
+      config.responseSchema = responseSchema;
     }
 
-    // Connect to the latest standard Google AI API endpoint
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+    // We use the reliable gemini-2.5-flash model 
+    // It fully supports structured JSON out of the box
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: config
     });
 
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error?.message || 'Gemini Server API Error');
-    }
-
-    // Extract the strict JSON payload from the AI response structure
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-      throw new Error('No valid music metadata content returned by the server.');
-    }
-
-    return res.status(200).json({ text });
+    // Send back the raw text string for the frontend to parse safely
+    return res.status(200).json({ text: response.text });
 
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("Gemini API backend proxy error:", error);
+    return res.status(500).json({ 
+      error: error.message || 'Internal Server Error' 
+    });
   }
 }
