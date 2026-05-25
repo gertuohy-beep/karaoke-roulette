@@ -32,6 +32,7 @@ export default async function handler(req, res) {
     }
 
     // Direct REST API payload structure for Gemini 2.5 Flash
+    // We remove responseMimeType here to allow Google Search Grounding tool use
     const payload = JSON.stringify({
       contents: [
         {
@@ -43,10 +44,7 @@ export default async function handler(req, res) {
       },
       tools: [
         { google_search: {} } // Real-time YouTube verification tool
-      ],
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
+      ]
     });
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
