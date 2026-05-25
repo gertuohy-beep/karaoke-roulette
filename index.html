@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Karaoke Roulette 🎤</title>
-<link href="[https://fonts.googleapis.com/css2?family=Russo+One&family=Bebas+Neue&family=Nunito:wght@400;600;700&display=swap](https://fonts.googleapis.com/css2?family=Russo+One&family=Bebas+Neue&family=Nunito:wght@400;600;700&display=swap)" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Bebas+Neue&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0a1a;
@@ -335,7 +335,6 @@
   </div>
   <div class="neon-line"></div>
 
-  <!-- STEP 1: Input -->
   <div class="card" id="step-input">
     <div class="card-title">🎯 Choose your style</div>
     <p style="font-size:0.9rem;color:var(--text-dim);margin-bottom:20px;">Tell us what kind of music you love and we'll spin the wheel to find your karaoke track.</p>
@@ -368,11 +367,10 @@
     </div>
   </div>
 
-  <!-- STEP 2: Confirm thumbnail -->
   <div class="card hidden" id="step-confirm">
     <div class="card-title">✅ Is this the right one?</div>
     <div class="thumb-box" id="confirm-box">
-      <img id="confirm-img" src="" alt="thumbnail" />
+      <img id="confirm-img" src="" alt="thumbnail" referrerpolicy="no-referrer" />
       <div class="thumb-title" id="confirm-title"></div>
       <div class="thumb-channel" id="confirm-channel"></div>
     </div>
@@ -384,17 +382,14 @@
     </div>
   </div>
 
-  <!-- STEP 3: Roulette spinning -->
   <div class="card hidden" id="step-roulette">
     <div class="card-title">🎰 Spinning the wheel…</div>
     <div class="roulette-container">
       <div class="wheel-wrap">
         <div class="wheel-pin"></div>
-        <svg class="wheel-svg" viewBox="0 0 200 200" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="260" height="260">
-          <!-- Roulette segments -->
+        <svg class="wheel-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" width="260" height="260">
           <circle cx="100" cy="100" r="98" fill="#1a1a35" stroke="#00f5ff" stroke-width="2"/>
           <g id="wheel-segments"></g>
-          <!-- Center circle -->
           <circle cx="100" cy="100" r="18" fill="#0a0a1a" stroke="#ff2d78" stroke-width="2"/>
           <text x="100" y="105" text-anchor="middle" fill="#ff2d78" font-size="10" font-family="Russo One">🎤</text>
         </svg>
@@ -403,12 +398,11 @@
     </div>
   </div>
 
-  <!-- STEP 4: Show karaoke result -->
   <div class="card hidden" id="step-result">
     <div class="card-title">🎶 Your Karaoke Track!</div>
     <div class="result-card">
       <div class="result-badge">🎤 KARAOKE VERSION</div>
-      <img id="result-img" src="" alt="karaoke thumbnail" />
+      <img id="result-img" src="" alt="karaoke thumbnail" referrerpolicy="no-referrer" />
       <div class="result-title" id="result-title"></div>
       <div class="result-channel" id="result-channel"></div>
       <a class="yt-link" id="result-link" href="#" target="_blank">
@@ -447,7 +441,7 @@
     const a2 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
     const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
     const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
-    const path = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'path');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', `M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`);
     path.setAttribute('fill', colors[i % colors.length]);
     path.setAttribute('opacity', '0.85');
@@ -456,7 +450,7 @@
     g.appendChild(path);
     const am = (a1 + a2) / 2;
     const tx = cx + (r * 0.65) * Math.cos(am), ty = cy + (r * 0.65) * Math.sin(am);
-    const text = document.createElementNS('[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)', 'text');
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     text.setAttribute('x', tx); text.setAttribute('y', ty);
     text.setAttribute('text-anchor','middle'); text.setAttribute('dominant-baseline','middle');
     text.setAttribute('font-size','18');
@@ -564,7 +558,7 @@ Return ONLY a JSON array of up to 3 results, each with these fields:
 - videoId: the YouTube video ID (11-character string)
 - title: video title
 - channelName: channel name
-- thumbnailUrl: [https://img.youtube.com/vi/](https://img.youtube.com/vi/){videoId}/hqdefault.jpg`;
+- thumbnailUrl: https://img.youtube.com/vi/{videoId}/hqdefault.jpg`;
 
     const results = await callClaudeJSON(prompt);
     if (!Array.isArray(results) || results.length === 0) throw new Error('No results found');
@@ -591,7 +585,7 @@ function showConfirm() {
   }
   const v = searchResults[currentResultIndex];
   document.getElementById('confirm-img').src = v.thumbnailUrl;
-  document.getElementById('confirm-img').onerror = function() { this.src = '[https://via.placeholder.com/320x180/1a1a35/00f5ff?text=No+Preview](https://via.placeholder.com/320x180/1a1a35/00f5ff?text=No+Preview)'; };
+  document.getElementById('confirm-img').onerror = function() { this.src = 'https://via.placeholder.com/320x180/1a1a35/00f5ff?text=No+Preview'; };
   document.getElementById('confirm-title').textContent = v.title;
   document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
   setError('step2-error', '');
@@ -625,7 +619,7 @@ async function fetchMoreResults() {
     const prompt = `Search YouTube for more results for this ${typeLabel}: "${query}".
 Exclude these video IDs: ${alreadySeen}.
 Return ONLY a JSON array of up to 3 different results, each with:
-- videoId, title, channelName, thumbnailUrl ([https://img.youtube.com/vi/](https://img.youtube.com/vi/){videoId}/hqdefault.jpg)`;
+- videoId, title, channelName, thumbnailUrl (https://img.youtube.com/vi/{videoId}/hqdefault.jpg)`;
 
     const moreResults = await callClaudeJSON(prompt);
     if (!Array.isArray(moreResults) || moreResults.length === 0) throw new Error('No more results');
@@ -699,7 +693,7 @@ Return ONLY a JSON object:
   "videoId": "real 11-char YouTube video ID of the karaoke version",
   "title": "exact YouTube video title",
   "channelName": "YouTube channel name",
-  "youtubeUrl": "[https://www.youtube.com/watch?v=](https://www.youtube.com/watch?v=){videoId}"
+  "youtubeUrl": "https://www.youtube.com/watch?v={videoId}"
 }`;
 
     const result = await callClaudeJSON(prompt);
@@ -722,7 +716,7 @@ Return ONLY a JSON object:
 
 function showResult(track) {
   document.getElementById('result-img').src = track.thumbnailUrl;
-  document.getElementById('result-img').onerror = function() { this.src = '[https://via.placeholder.com/320x180/1a1a35/ffe600?text=](https://via.placeholder.com/320x180/1a1a35/ffe600?text=)🎤+Karaoke'; };
+  document.getElementById('result-img').onerror = function() { this.src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=🎤+Karaoke'; };
   document.getElementById('result-title').textContent = track.title || (track.chosenSong + ' — ' + track.chosenArtist);
   const genreTag = track.genre ? ` • ${track.genre}` : '';
   const artistTag = track.chosenArtist ? ` • ${track.chosenArtist}` : '';
@@ -754,7 +748,7 @@ Return ONLY a JSON object:
   "videoId": "real 11-char YouTube video ID",
   "title": "exact YouTube video title",
   "channelName": "YouTube channel name",
-  "youtubeUrl": "[https://www.youtube.com/watch?v=](https://www.youtube.com/watch?v=){videoId}"
+  "youtubeUrl": "https://www.youtube.com/watch?v={videoId}"
 }`;
 
     const result = await callClaudeJSON(prompt);
