@@ -8,8 +8,11 @@
 <style>
   :root {
     --bg: #0a0a1a; --surface: #12122a; --card: #1a1a35;
-    --neon-pink: #ff2d78; --neon-cyan: #00f5ff; --neon-purple: #bf5fff;
-    --text: #f0f0ff; --border: rgba(0,245,255,0.18);
+    --neon-pink: #ff2d78; --neon-cyan: #00f5ff; --neon-yellow: #ffe600;
+    --neon-purple: #bf5fff; --text: #f0f0ff; --text-dim: #7878aa;
+    --border: rgba(0,245,255,0.18);
+    --glow-pink: 0 0 20px rgba(255,45,120,0.6), 0 0 60px rgba(255,45,120,0.2);
+    --glow-cyan: 0 0 20px rgba(0,245,255,0.6), 0 0 60px rgba(0,245,255,0.2);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px 16px; }
@@ -79,19 +82,12 @@ async function callClaudeJSON(prompt) {
   const resp = await fetch("/api/karaoke-agent", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, systemPrompt: "Return only raw JSON array." })
+    body: JSON.stringify({ prompt, systemPrompt: "Return only raw JSON array of up to 3 objects with {videoId, title, channelName}." })
   });
   const data = await resp.json();
   const rawText = typeof data.text === 'string' ? data.text : JSON.stringify(data.text);
-  
-  // Safe extraction without complex regex
-  let jsonStr = rawText;
-  const start = jsonStr.indexOf('[');
-  const end = jsonStr.lastIndexOf(']');
-  if (start !== -1 && end !== -1) {
-    jsonStr = jsonStr.substring(start, end + 1);
-  }
-  return JSON.parse(jsonStr);
+  const match = rawText.match(/\[[\s\S]*\]/);
+  return match ? JSON.parse(match[0]) : [];
 }
 
 async function startSearch() {
@@ -102,7 +98,8 @@ async function startSearch() {
   
   try {
     const typeLabel = selectedOption === 1 ? 'song' : 'artist/band';
-    const prompt = `Find 3 YouTube music videos for ${typeLabel}: "${query}". Return as JSON array: [{videoId, title, channelName}]`;
+    // Optimized prompt for speed: simple and direct
+    const prompt = `Search YouTube for: "${query}". Return a JSON array of 3 results with {videoId, title, channelName}.`;
     searchResults = await callClaudeJSON(prompt);
     currentResultIndex = 0;
     showConfirm();
