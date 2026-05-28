@@ -199,7 +199,7 @@
   .thumb-channel {
     font-size: 0.85rem; color: var(--text-dim);
   }
-  .thumb-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; }
+  .thumb-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: center; flex-wrap: wrap; }
 
   .roulette-container {
     display: flex; flex-direction: column; align-items: center;
@@ -350,7 +350,7 @@
   <div class="card hidden" id="step-confirm">
     <div class="card-title">✅ Is this the right one?</div>
     <div class="thumb-box" id="confirm-box">
-      <img id="confirm-img" src="https://via.placeholder.com/320x180/1a1a35/00f5ff?text=Loading..." alt="thumbnail" referrerpolicy="no-referrer" />
+      <img id="confirm-img" src="https://via.placeholder.com/320x180/1a1a35/00f5ff?text=Loading+Thumbnail..." alt="thumbnail" referrerpolicy="no-referrer" />
       <div class="thumb-title" id="confirm-title"></div>
       <div class="thumb-channel" id="confirm-channel"></div>
     </div>
@@ -382,7 +382,7 @@
     <div class="card-title">🎶 Your Karaoke Track!</div>
     <div class="result-card">
       <div class="result-badge">🎤 KARAOKE VERSION</div>
-      <img id="result-img" src="https://via.placeholder.com/320x180/1a1a35/ffe600?text=Loading..." alt="karaoke thumbnail" referrerpolicy="no-referrer" />
+      <img id="result-img" src="https://via.placeholder.com/320x180/1a1a35/ffe600?text=Loading+Karaoke..." alt="karaoke thumbnail" referrerpolicy="no-referrer" />
       <div class="result-title" id="result-title"></div>
       <div class="result-channel" id="result-channel"></div>
       <a class="yt-link" id="result-link" href="#" target="_blank" rel="noopener noreferrer">
@@ -392,13 +392,14 @@
     <div class="play-again">
       <p>Ready for another spin?</p>
       <button class="btn btn-primary btn-full" onclick="playAgain()">🎰 Spin Again!</button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="tryDifferentKaraoke()">🎲 Try Different Karaoke</button>
     </div>
   </div>
 
 </div>
 
 <script>
-// Star field and wheel (unchanged)
+// Star field and wheel
 (function() {
   const container = document.getElementById('stars');
   for (let i = 0; i < 80; i++) {
@@ -438,7 +439,7 @@
   }
 })();
 
-// App state
+// State
 let selectedOption = 1;
 let searchResults = [];
 let currentResultIndex = 0;
@@ -469,7 +470,7 @@ function setError(id, msg) {
   else { el.classList.add('hidden'); }
 }
 
-// API call
+// API
 async function callClaudeJSON(prompt) {
   try {
     const response = await fetch("/api/karaoke-agent", {
@@ -482,105 +483,91 @@ async function callClaudeJSON(prompt) {
     });
 
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || `Server error: ${response.status}`);
+    if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
     return extractJSON(data.text);
   } catch (error) {
     console.error("API Error:", error);
-    throw new Error(error.message || "Failed to connect to backend");
+    throw error;
   }
 }
 
 function extractJSON(text) {
   if (!text || !text.trim()) throw new Error("Empty response");
-
   try { return JSON.parse(text.trim()); } catch(_) {}
 
   const hexBacktick = "\x60\x60\x60";
-  const dynamicFenceRegex = new RegExp(hexBacktick + "(?:json)?[\\s\\S]*?" + hexBacktick, "g");
-  const stripped = text.replace(dynamicFenceRegex, match => 
-    match.replace(new RegExp(hexBacktick + "(?:json)?", "g"), "").replace(new RegExp(hexBacktick, "g"), "")
+  const stripped = text.replace(new RegExp(hexBacktick + "(?:json)?[\\s\\S]*?" + hexBacktick, "g"), m => 
+    m.replace(new RegExp(hexBacktick + "(?:json)?", "g"), "").replace(new RegExp(hexBacktick, "g"), "")
   ).trim();
-  
   try { return JSON.parse(stripped); } catch(_) {}
 
-  const objMatch = text.match(/\{[\s\S]*\}/);
-  if (objMatch) try { return JSON.parse(objMatch[0]); } catch(_) {}
-  const arrMatch = text.match(/\[[\s\S]*\]/);
-  if (arrMatch) try { return JSON.parse(arrMatch[0]); } catch(_) {}
+  const obj = text.match(/\{[\s\S]*\}/);
+  if (obj) try { return JSON.parse(obj[0]); } catch(_) {}
+  const arr = text.match(/\[[\s\S]*\]/);
+  if (arr) try { return JSON.parse(arr[0]); } catch(_) {}
 
-  throw new Error("Invalid JSON response");
+  throw new Error("Could not parse JSON");
 }
 
-// Robust thumbnail loader
+// Thumbnail loader with fallback
 function loadThumbnail(imgElement, videoId, fallbackText = "No Preview") {
-  if (!videoId || typeof videoId !== "string" || videoId.length !== 11) {
+  if (!videoId || videoId.length !== 11) {
     imgElement.src = `https://via.placeholder.com/320x180/1a1a35/00f5ff?text=${encodeURIComponent(fallbackText)}`;
     return;
   }
-
   const qualities = [
     `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
     `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
     `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
     `https://img.youtube.com/vi/${videoId}/default.jpg`
   ];
-
-  let index = 0;
+  let i = 0;
   function tryNext() {
-    if (index >= qualities.length) {
+    if (i >= qualities.length) {
       imgElement.src = `https://via.placeholder.com/320x180/1a1a35/00f5ff?text=${encodeURIComponent(fallbackText)}`;
       return;
     }
-    imgElement.src = qualities[index++];
+    imgElement.src = qualities[i++];
   }
-
   imgElement.onerror = tryNext;
   tryNext();
 }
 
-// Search step
+// Search
 async function startSearch() {
   const query = document.getElementById('search-input').value.trim();
-  if (!query) return setError('step1-error', 'Please enter something first!');
+  if (!query) return setError('step1-error', 'Please enter something!');
 
   const btn = document.querySelector('#step-input .btn-primary');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="search-spinner"></span>Searching…';
+  btn.disabled = true; btn.innerHTML = '<span class="search-spinner"></span>Searching…';
 
   try {
     const typeLabel = selectedOption === 1 ? 'artist and song' : selectedOption === 2 ? 'artist or band' : 'song title';
-    const prompt = `Search YouTube for this ${typeLabel}: "${query}". 
-Find the MOST RELEVANT official music video or high-quality upload. 
-Return ONLY a JSON array of up to 3 results with:
-- videoId: exact 11-character YouTube ID
-- title: video title
-- channelName: channel name`;
+    const prompt = `Find the most relevant official/high-quality YouTube video for: "${query}".
+Return ONLY JSON array (max 3 items):
+[{"videoId": "11charID", "title": "...", "channelName": "..."}]`;
 
     const results = await callClaudeJSON(prompt);
     if (!Array.isArray(results) || results.length === 0) throw new Error('No results');
 
-    searchResults = results.map(r => ({
-      ...r,
-      url: `https://www.youtube.com/watch?v=${r.videoId}`
-    }));
+    searchResults = results;
     currentResultIndex = 0;
     showConfirm();
   } catch(e) {
-    setError('step1-error', 'Search failed — ' + e.message);
+    setError('step1-error', 'Search failed: ' + e.message);
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Search';
+    btn.disabled = false; btn.innerHTML = 'Search';
   }
 }
 
 function showConfirm() {
   if (currentResultIndex >= searchResults.length) {
-    setError('step2-error', 'No more results. Try a different search.');
+    setError('step2-error', 'No more options. Go back.');
     return;
   }
   const v = searchResults[currentResultIndex];
   loadThumbnail(document.getElementById('confirm-img'), v.videoId, 'No Preview');
-  document.getElementById('confirm-title').textContent = v.title || 'Unknown Title';
+  document.getElementById('confirm-title').textContent = v.title || 'Unknown';
   document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
   showStep('step-confirm');
 }
@@ -596,78 +583,67 @@ function tryAnother() {
   showConfirm();
 }
 
+// Improved Karaoke finder
 async function findKaraokeTrack() {
   try {
     const v = confirmedVideo;
-    const originalArtist = (v.channelName || v.title || '').split(/[-–—]/)[0].trim();
+    const prompt = `User likes: "${v.title}".
+Find a **currently available, popular** karaoke version of a DIFFERENT song (different artist) in similar style/genre.
 
-    const prompt = `You are a Karaoke Roulette expert.
-User original song: "${v.title}"
-Find a **currently available, public** karaoke version of a DIFFERENT song by a DIFFERENT artist in the same genre/style.
+CRITICAL: Return ONLY a REAL, PUBLIC, NON-DELETED YouTube karaoke video from reputable channels like Sing King, KaraFun, etc.
 
-STRICT REQUIREMENTS:
-- Must be a real, working YouTube karaoke video (not removed)
-- Prefer channels like: Sing King Karaoke, Karaoke Version, The Karaoke Channel, etc.
-- Return ONLY valid JSON with a REAL existing videoId
-
+Return JSON:
 {
   "chosenArtist": "...",
   "chosenSong": "...",
   "genre": "...",
-  "videoId": "11 character youtube id",
-  "title": "exact title",
+  "videoId": "exactly 11 characters",
+  "title": "full video title",
   "channelName": "...",
-  "youtubeUrl": "full youtube url"
+  "youtubeUrl": "https://www.youtube.com/watch?v=VIDEOID"
 }`;
 
     const result = await callClaudeJSON(prompt);
-    if (!result || !result.videoId || result.videoId.length !== 11) {
-      throw new Error("Invalid karaoke video");
-    }
+    if (!result?.videoId || result.videoId.length !== 11) throw new Error("Bad video ID");
 
     result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
     showResult(result);
   } catch(e) {
     console.error(e);
     showStep('step-result');
-    document.getElementById('result-title').textContent = "Couldn't find a valid karaoke track";
-    document.getElementById('result-channel').textContent = "Please try again with a different song";
-    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ff2d78?text=Try+Again';
+    document.getElementById('result-title').textContent = "Couldn't find valid karaoke track";
+    document.getElementById('result-channel').textContent = "The AI picked a deleted video. Try again.";
+    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ff2d78?text=Video+Not+Found';
     document.getElementById('result-link').href = '#';
   }
 }
 
 function showResult(track) {
   loadThumbnail(document.getElementById('result-img'), track.videoId, '🎤 Karaoke');
-  document.getElementById('result-title').textContent = track.title || `${track.chosenSong} - ${track.chosenArtist}`;
+  document.getElementById('result-title').textContent = track.title || `${track.chosenSong} — ${track.chosenArtist}`;
   document.getElementById('result-channel').textContent = `📺 ${track.channelName || 'YouTube'}`;
-  
-  const linkEl = document.getElementById('result-link');
-  linkEl.href = track.youtubeUrl || `https://www.youtube.com/watch?v=${track.videoId}`;
-  
+  document.getElementById('result-link').href = track.youtubeUrl || `https://www.youtube.com/watch?v=${track.videoId}`;
   showStep('step-result');
 }
 
-async function feelingLucky() {
-  const genres = ['Classic Rock', 'Pop', '80s', 'Country', 'R&B', 'Disco'];
-  const genre = genres[Math.floor(Math.random() * genres.length)];
-  
+async function tryDifferentKaraoke() {
+  if (!confirmedVideo) return;
   showStep('step-roulette');
-  
-  try {
-    const prompt = `Pick a popular, currently available karaoke song in ${genre} genre.
-Return ONLY valid JSON with a real working YouTube karaoke videoId.`;
+  findKaraokeTrack();
+}
 
+async function feelingLucky() {
+  showStep('step-roulette');
+  try {
+    const prompt = `Pick one popular, currently available karaoke track. Return valid JSON with real 11-char videoId from a reputable karaoke channel.`;
     const result = await callClaudeJSON(prompt);
-    if (!result || !result.videoId || result.videoId.length !== 11) throw new Error("No valid track");
-    
+    if (!result?.videoId || result.videoId.length !== 11) throw new Error();
     result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
     showResult(result);
   } catch(e) {
     showStep('step-result');
     document.getElementById('result-title').textContent = "Lucky spin failed";
-    document.getElementById('result-channel').textContent = "Try searching manually";
-    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=Try+Search';
+    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=Try+Again';
     document.getElementById('result-link').href = '#';
   }
 }
