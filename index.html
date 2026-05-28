@@ -202,15 +202,12 @@
     box-shadow: var(--glow-pink);
   }
   .thumb-placeholder {
-    width: 100%; max-width: 320px;
-    height: 180px;
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    width: 100%; max-width: 320px; height: 180px;
+    border-radius: 8px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
     margin: 0 auto 12px;
-    border: 2px solid var(--neon-pink);
-    box-shadow: var(--glow-pink);
-    background: linear-gradient(135deg, #1a1a35, #0a0a1a);
-    flex-direction: column; gap: 8px;
-    color: var(--neon-pink); font-size: 2.5rem;
+    border: 2px solid var(--neon-pink); box-shadow: var(--glow-pink);
+    background: linear-gradient(135deg, #1a1a35, #0a0a1a); font-size: 2.5rem;
   }
   .thumb-placeholder span { font-size: 0.75rem; color: var(--text-dim); font-family: 'Nunito', sans-serif; }
   .thumb-title {
@@ -269,15 +266,12 @@
     box-shadow: var(--glow-yellow);
   }
   .result-placeholder {
-    width: 100%; max-width: 320px;
-    height: 180px;
-    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    width: 100%; max-width: 320px; height: 180px;
+    border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
     margin: 0 auto 14px;
-    border: 2px solid var(--neon-yellow);
-    box-shadow: var(--glow-yellow);
-    background: linear-gradient(135deg, #1a1a35, #0a0a1a);
-    flex-direction: column; gap: 8px;
-    color: var(--neon-yellow); font-size: 2.5rem;
+    border: 2px solid var(--neon-yellow); box-shadow: var(--glow-yellow);
+    background: linear-gradient(135deg, #1a1a35, #0a0a1a); font-size: 2.5rem;
   }
   .result-placeholder span { font-size: 0.75rem; color: var(--text-dim); font-family: 'Nunito', sans-serif; }
   .result-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; }
@@ -484,98 +478,6 @@
 })();
 
 // ─── App state ────────────────────────────────────────────────────────────────
-
-// ─── Thumbnail helpers ────────────────────────────────────────────────────────
-
-// Fetch artist image from iTunes Search API (free, no key, CORS-friendly)
-async function fetchArtistImage(artistName) {
-  if (!artistName) return null;
-  try {
-    const query = encodeURIComponent(artistName);
-    const res = await fetch('https://itunes.apple.com/search?term=' + query + '&entity=musicArtist&limit=3');
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      // artworkUrl100 is 100x100 — replace with 600x600 for better quality
-      const url = data.results[0].artworkUrl100;
-      if (url) return url.replace('100x100bb', '600x600bb');
-    }
-  } catch(e) { /* fall through */ }
-  return null;
-}
-
-// Fetch song/track image from iTunes (tries track artwork first, then artist)
-async function fetchTrackImage(artistName, songTitle) {
-  if (!artistName && !songTitle) return null;
-  try {
-    const query = encodeURIComponent((artistName || '') + ' ' + (songTitle || ''));
-    const res = await fetch('https://itunes.apple.com/search?term=' + query + '&entity=song&limit=5');
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.results && data.results.length > 0) {
-      const url = data.results[0].artworkUrl100;
-      if (url) return url.replace('100x100bb', '600x600bb');
-    }
-  } catch(e) { /* fall through */ }
-  // Fallback: try artist-only search
-  return fetchArtistImage(artistName);
-}
-
-function renderImage(wrapId, imageUrl, styleClass) {
-  const wrap = document.getElementById(wrapId);
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  if (!imageUrl) {
-    wrap.innerHTML = '<div class="' + styleClass + '-placeholder">🎤<span>No image found</span></div>';
-    return;
-  }
-  const img = document.createElement('img');
-  img.alt = 'artist image';
-  if (styleClass === 'result') {
-    img.style.cssText = 'width:100%;max-width:320px;border-radius:10px;display:block;margin:0 auto 14px;border:2px solid var(--neon-yellow);box-shadow:var(--glow-yellow);';
-  } else {
-    img.style.cssText = 'width:100%;max-width:320px;border-radius:8px;display:block;margin:0 auto 12px;border:2px solid var(--neon-pink);box-shadow:var(--glow-pink);';
-  }
-  img.onerror = function() {
-    wrap.innerHTML = '<div class="' + styleClass + '-placeholder">🎤<span>No image found</span></div>';
-  };
-  img.src = imageUrl;
-  wrap.appendChild(img);
-}
-
-// Show a loading spinner in the thumb wrap while fetching
-function setThumbLoading(wrapId, styleClass) {
-  const wrap = document.getElementById(wrapId);
-  if (!wrap) return;
-  wrap.innerHTML = '<div class="' + styleClass + '-placeholder" style="font-size:1.5rem;gap:6px;"><span class='search-spinner'></span><span style='font-size:0.8rem'>Loading image…</span></div>';
-}
-
-// Main entry: fetch iTunes image for a track and render it
-async function setThumbnail(wrapId, videoId, styleClass, artistName, songTitle) {
-  setThumbLoading(wrapId, styleClass);
-  const imageUrl = await fetchTrackImage(artistName, songTitle);
-  renderImage(wrapId, imageUrl, styleClass);
-}
-
-// Validate a YouTube video ID: YouTube returns a 120x90 gray image for invalid/deleted videos
-async function validateVideoId(videoId) {
-  if (!videoId || videoId.length !== 11) return false;
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => { resolve(!(img.width === 120 && img.height === 90)); };
-    img.onerror = () => resolve(false);
-    img.src = 'https://img.youtube.com/vi/' + videoId + '/mqdefault.jpg';
-  });
-}
-
-// Build a YouTube URL; fall back to a search URL if the video ID is invalid
-function buildYouTubeUrl(videoId, fallbackTitle) {
-  if (!videoId) {
-    return 'https://www.youtube.com/results?search_query=' + encodeURIComponent((fallbackTitle || 'karaoke') + ' karaoke');
-  }
-  return 'https://www.youtube.com/watch?v=' + videoId;
-}
-
 let selectedOption = 1;
 let searchResults = [];
 let currentResultIndex = 0;
@@ -700,7 +602,7 @@ function showConfirm() {
     return;
   }
   const v = searchResults[currentResultIndex];
-  setThumbnail('confirm-thumb-wrap', v.videoId, 'thumb', v.channelName, v.title);
+  loadAndRenderThumb('confirm-thumb-wrap', v.channelName, v.title, false);
   document.getElementById('confirm-title').textContent = v.title;
   document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
   setError('step2-error', '');
@@ -817,35 +719,32 @@ Return ONLY a JSON object:
     if (result.chosenArtist) seenArtists.push(result.chosenArtist.toLowerCase());
 
     result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    // Build a safe URL; if the video doesn't exist, fall back to a YouTube search
-    const isValid = await validateVideoId(result.videoId);
-    if (isValid) {
-      result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
-    } else {
-      const searchTerms = encodeURIComponent((result.chosenSong || result.title || '') + ' ' + (result.chosenArtist || '') + ' karaoke');
-      result.youtubeUrl = `https://www.youtube.com/results?search_query=${searchTerms}`;
-      result.videoId = null; // suppress broken thumbnail
-    }
+    if (!result.youtubeUrl) result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
+    var isValid = await new Promise(function(resolve) {
+      var chk = new Image(); chk.onload = function() { resolve(!(chk.width===120&&chk.height===90)); };
+      chk.onerror = function() { resolve(false); };
+      chk.src = 'https://img.youtube.com/vi/' + result.videoId + '/mqdefault.jpg';
+    });
+    if (!isValid) { var sq=encodeURIComponent((result.chosenSong||'')+' '+(result.chosenArtist||'')+' karaoke'); result.youtubeUrl='https://www.youtube.com/results?search_query='+sq; }
 
     showResult(result);
   } catch(e) {
     showStep('step-result');
     document.getElementById('result-title').textContent = 'Could not find a karaoke track. Please try again.';
     document.getElementById('result-channel').textContent = e.message || '';
-    setThumbnail('result-thumb-wrap', null, 'result', null, null);
+    renderThumb('result-thumb-wrap', null, true);
     document.getElementById('result-link').href = '#';
   }
 }
 
 function showResult(track) {
-  setThumbnail('result-thumb-wrap', track.videoId, 'result', track.chosenArtist || track.channelName, track.chosenSong || track.title);
+  loadAndRenderThumb('result-thumb-wrap', track.chosenArtist || track.channelName, track.chosenSong || track.title, true);
   document.getElementById('result-title').textContent = track.title || (track.chosenSong + ' — ' + track.chosenArtist);
   const genreTag = track.genre ? ` • ${track.genre}` : '';
   const artistTag = track.chosenArtist ? ` • ${track.chosenArtist}` : '';
   document.getElementById('result-channel').textContent = '📺 ' + (track.channelName || 'YouTube') + artistTag + genreTag;
-  const validatedUrl = buildYouTubeUrl(track.videoId, track.title || track.chosenSong);
-  document.getElementById('result-link').href = validatedUrl;
-  document.getElementById('result-link').textContent = track.videoId ? '▶ Open on YouTube' : '🔍 Search on YouTube';
+  document.getElementById('result-link').href = track.youtubeUrl;
+  document.getElementById('result-link').textContent = (track.youtubeUrl && track.youtubeUrl.indexOf('results') !== -1) ? '🔍 Search on YouTube' : '▶ Open on YouTube';
   showStep('step-result');
 }
 
@@ -878,20 +777,19 @@ Return ONLY a JSON object:
     const result = await callClaudeJSON(prompt);
     if (!result || !result.videoId) throw new Error('No result');
     result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    const isValidLucky = await validateVideoId(result.videoId);
-    if (isValidLucky) {
-      result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
-    } else {
-      const searchTerms = encodeURIComponent((result.chosenSong || result.title || '') + ' ' + (result.chosenArtist || '') + ' karaoke');
-      result.youtubeUrl = `https://www.youtube.com/results?search_query=${searchTerms}`;
-      result.videoId = null;
-    }
+    if (!result.youtubeUrl) result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
+    var isValidL = await new Promise(function(resolve) {
+      var chk = new Image(); chk.onload = function() { resolve(!(chk.width===120&&chk.height===90)); };
+      chk.onerror = function() { resolve(false); };
+      chk.src = 'https://img.youtube.com/vi/' + result.videoId + '/mqdefault.jpg';
+    });
+    if (!isValidL) { var sqL=encodeURIComponent((result.chosenSong||'')+' '+(result.chosenArtist||'')+' karaoke'); result.youtubeUrl='https://www.youtube.com/results?search_query='+sqL; }
     showResult(result);
   } catch(e) {
     showStep('step-result');
     document.getElementById('result-title').textContent = 'Could not find a track. Please try again.';
     document.getElementById('result-channel').textContent = e.message || '';
-    setThumbnail('result-thumb-wrap', null, 'result', null, null);
+    renderThumb('result-thumb-wrap', null, true);
     document.getElementById('result-link').href = '#';
   }
 }
@@ -914,6 +812,63 @@ function playAgain() {
 document.getElementById('search-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') startSearch();
 });
+
+// ─── iTunes image helpers ─────────────────────────────────────────────────────
+async function fetchItunesImage(artistName, songTitle) {
+  var term = ((artistName || '') + ' ' + (songTitle || '')).trim();
+  if (!term) return null;
+  try {
+    var res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(term) + '&entity=song&limit=5');
+    if (res.ok) {
+      var data = await res.json();
+      if (data.results && data.results.length > 0 && data.results[0].artworkUrl100) {
+        return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+      }
+    }
+  } catch(e) {}
+  try {
+    var res2 = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(artistName || term) + '&entity=musicArtist&limit=3');
+    if (res2.ok) {
+      var data2 = await res2.json();
+      if (data2.results && data2.results.length > 0 && data2.results[0].artworkUrl100) {
+        return data2.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function renderThumb(wrapId, imageUrl, isResult) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  if (!imageUrl) {
+    var cls = isResult ? 'result-placeholder' : 'thumb-placeholder';
+    wrap.innerHTML = '<div class="' + cls + '">\u{1F3A4}<span>No image found</span></div>';
+    return;
+  }
+  var img = document.createElement('img');
+  img.alt = 'artist image';
+  if (isResult) {
+    img.style.cssText = 'width:100%;max-width:320px;border-radius:10px;display:block;margin:0 auto 14px;border:2px solid var(--neon-yellow);box-shadow:var(--glow-yellow);';
+  } else {
+    img.style.cssText = 'width:100%;max-width:320px;border-radius:8px;display:block;margin:0 auto 12px;border:2px solid var(--neon-pink);box-shadow:var(--glow-pink);';
+  }
+  img.onerror = function() {
+    var cls = isResult ? 'result-placeholder' : 'thumb-placeholder';
+    wrap.innerHTML = '<div class="' + cls + '">\u{1F3A4}<span>No image found</span></div>';
+  };
+  img.src = imageUrl;
+  wrap.appendChild(img);
+}
+
+async function loadAndRenderThumb(wrapId, artistName, songTitle, isResult) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var cls = isResult ? 'result-placeholder' : 'thumb-placeholder';
+  wrap.innerHTML = '<div class="' + cls + '" style="font-size:1.4rem;"><span class=\"search-spinner\"></span><span style=\"font-size:0.8rem;color:var(--text-dim)\">Loading…</span></div>';
+  var url = await fetchItunesImage(artistName, songTitle);
+  renderThumb(wrapId, url, isResult);
+}
 </script>
 </body>
 </html>
