@@ -405,7 +405,7 @@
       <img id="result-img" src="" alt="karaoke thumbnail" referrerpolicy="no-referrer" />
       <div class="result-title" id="result-title"></div>
       <div class="result-channel" id="result-channel"></div>
-      <a class="yt-link" id="result-link" href="#" target="_blank" rel="noopener">
+      <a class="yt-link" id="result-link" href="#" target="_blank" rel="noopener noreferrer">
         ▶ Open on YouTube
       </a>
     </div>
@@ -514,14 +514,12 @@ async function callClaudeJSON(prompt) {
   }
 }
 
-// Safely parsing and cleaning markdown blocks without colliding with markdown interpreters
+// Safely parsing and cleaning markdown blocks
 function extractJSON(text) {
   if (!text || !text.trim()) throw new Error("Empty response from API");
 
-  // 1. Try direct parse first
   try { return JSON.parse(text.trim()); } catch(_) {}
 
-  // 2. Safely dynamic check and strip backticks using RegExp with hex-encoded tokens to prevent syntax parsing clashes
   const hexBacktick = "\x60\x60\x60";
   const dynamicFenceRegex = new RegExp(hexBacktick + "(?:json)?[\\s\\S]*?" + hexBacktick, "g");
   const stripped = text.replace(dynamicFenceRegex, function(match) {
@@ -532,7 +530,6 @@ function extractJSON(text) {
   
   try { return JSON.parse(stripped); } catch(_) {}
 
-  // 3. Extract first JSON object {...} or array [...] structures
   const objMatch = text.match(/\{[\s\S]*\}/);
   if (objMatch) { try { return JSON.parse(objMatch[0]); } catch(_) {} }
   const arrMatch = text.match(/\[[\s\S]*\]/);
@@ -541,30 +538,28 @@ function extractJSON(text) {
   throw new Error("Could not parse JSON from response: " + text.substring(0, 200));
 }
 
-// Helper: Robust thumbnail loader with multiple fallbacks
-function loadThumbnail(imgElement, videoId, fallbackText) {
-  if (!videoId || videoId.length !== 11) {
+// Robust thumbnail loader with multiple quality levels
+function loadThumbnail(imgElement, videoId, fallbackText = "No Preview") {
+  if (!videoId || typeof videoId !== 'string' || videoId.length !== 11) {
     imgElement.src = `https://via.placeholder.com/320x180/1a1a35/00f5ff?text=${encodeURIComponent(fallbackText)}`;
     return;
   }
 
-  const base = `https://img.youtube.com/vi/${videoId}`;
-  const attempts = [
-    `${base}/maxresdefault.jpg`,
-    `${base}/hqdefault.jpg`,
-    `${base}/sddefault.jpg`,
-    `${base}/default.jpg`
+  const qualities = [
+    `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/default.jpg`
   ];
 
-  let attemptIndex = 0;
+  let index = 0;
 
   function tryNext() {
-    if (attemptIndex >= attempts.length) {
+    if (index >= qualities.length) {
       imgElement.src = `https://via.placeholder.com/320x180/1a1a35/00f5ff?text=${encodeURIComponent(fallbackText)}`;
       return;
     }
-    imgElement.src = attempts[attemptIndex];
-    attemptIndex++;
+    imgElement.src = qualities[index++];
   }
 
   imgElement.onerror = tryNext;
@@ -585,10 +580,9 @@ async function startSearch() {
     const prompt = `Search YouTube for this ${typeLabel}: "${query}". 
 Find the most relevant official music video or song. 
 Return ONLY a JSON array of up to 3 results, each with these fields:
-- videoId: the YouTube video ID (11-character string)
+- videoId: the YouTube video ID (exactly 11 characters)
 - title: video title
-- channelName: channel name
-- thumbnailUrl: https://img.youtube.com/vi/{videoId}/hqdefault.jpg`;
+- channelName: channel name`;
 
     const results = await callClaudeJSON(prompt);
     if (!Array.isArray(results) || results.length === 0) throw new Error('No results found');
@@ -615,9 +609,7 @@ function showConfirm() {
   }
   const v = searchResults[currentResultIndex];
   
-  // Use robust thumbnail loader
-  const confirmImg = document.getElementById('confirm-img');
-  loadThumbnail(confirmImg, v.videoId, 'No Preview');
+  loadThumbnail(document.getElementById('confirm-img'), v.videoId, 'No Preview');
   
   document.getElementById('confirm-title').textContent = v.title;
   document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
@@ -652,7 +644,7 @@ async function fetchMoreResults() {
     const prompt = `Search YouTube for more results for this ${typeLabel}: "${query}".
 Exclude these video IDs: ${alreadySeen}.
 Return ONLY a JSON array of up to 3 different results, each with:
-- videoId, title, channelName, thumbnailUrl[](https://img.youtube.com/vi/{videoId}/hqdefault.jpg)`;
+- videoId, title, channelName`;
 
     const moreResults = await callClaudeJSON(prompt);
     if (!Array.isArray(moreResults) || moreResults.length === 0) throw new Error('No more results');
@@ -701,7 +693,7 @@ const WILDCARDS = [
 async function findKaraokeTrack() {
   try {
     const v = confirmedVideo;
-    const originalArtist = v.channelName || v.title.split(' - ')[0] || v.title.split(' – ')[0];
+    const originalArtist = (v.channelName || v.title || '').split(/[-–—]/)[0].trim();
     seenArtists.push(originalArtist.toLowerCase());
 
     const wildcard = WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)];
@@ -715,10 +707,10 @@ STRICT RULES:
 1. NEVER pick the same artist as "${originalArtist}".
 2. ${avoidList}
 3. The song MUST be in a similar genre/style/era to "${v.title}".
-4. The result MUST be a karaoke version. Find it on YouTube. Prefer well-known karaoke channels like Sing King, Karaoke Version, etc.
+4. The result MUST be a karaoke version from a reputable source (Sing King, Karaoke Version, etc.).
 5. Nudge rule: ${wildcard}
 
-Return ONLY a JSON object:
+Return ONLY a JSON object with valid, existing YouTube video:
 {
   "chosenArtist": "the artist you picked",
   "chosenSong": "the song title you picked",
@@ -730,39 +722,33 @@ Return ONLY a JSON object:
 }`;
 
     const result = await callClaudeJSON(prompt);
-    if (!result || !result.videoId || result.videoId.length !== 11) throw new Error('No karaoke track found');
+    if (!result || !result.videoId || result.videoId.length !== 11) throw new Error('No valid karaoke track found');
 
     if (result.chosenArtist) seenArtists.push(result.chosenArtist.toLowerCase());
 
-    result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    if (!result.youtubeUrl) result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
+    result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
 
     showResult(result);
   } catch(e) {
+    console.error(e);
     showStep('step-result');
     document.getElementById('result-title').textContent = 'Could not find a karaoke track. Please try again.';
-    document.getElementById('result-channel').textContent = e.message || '';
-    document.getElementById('result-img').src = '';
+    document.getElementById('result-channel').textContent = e.message || 'Try a different starting song.';
+    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=🎤+Try+Again';
     document.getElementById('result-link').href = '#';
   }
 }
 
 function showResult(track) {
-  const resultImg = document.getElementById('result-img');
-  loadThumbnail(resultImg, track.videoId, '🎤 Karaoke');
+  loadThumbnail(document.getElementById('result-img'), track.videoId, '🎤 Karaoke');
   
   document.getElementById('result-title').textContent = track.title || (track.chosenSong + ' — ' + track.chosenArtist);
   const genreTag = track.genre ? ` • ${track.genre}` : '';
   const artistTag = track.chosenArtist ? ` • ${track.chosenArtist}` : '';
   document.getElementById('result-channel').textContent = '📺 ' + (track.channelName || 'YouTube') + artistTag + genreTag;
   
-  // Ensure valid YouTube link
   const link = document.getElementById('result-link');
-  if (track.youtubeUrl && track.youtubeUrl.includes('youtube.com/watch?v=')) {
-    link.href = track.youtubeUrl;
-  } else {
-    link.href = `https://www.youtube.com/watch?v=${track.videoId}`;
-  }
+  link.href = track.youtubeUrl || `https://www.youtube.com/watch?v=${track.videoId}`;
   
   showStep('step-result');
 }
@@ -781,9 +767,8 @@ async function feelingLucky() {
   showStep('step-roulette');
   document.querySelector('.spin-label').textContent = 'Finding a random karaoke track…';
   try {
-    const prompt = `You are a Karaoke Roulette DJ. Pick a RANDOM popular karaoke song for the user from the genre: "${genre}".
-Prefer well-known karaoke versions from reputable channels.
-Return ONLY a JSON object:
+    const prompt = `You are a Karaoke Roulette DJ. Pick a RANDOM popular, currently available karaoke song for the user from the genre: "${genre}".
+Must be from reputable karaoke channels. Return ONLY a JSON object:
 {
   "chosenArtist": "artist name",
   "chosenSong": "song title",
@@ -795,17 +780,15 @@ Return ONLY a JSON object:
 }`;
 
     const result = await callClaudeJSON(prompt);
-    if (!result || !result.videoId || result.videoId.length !== 11) throw new Error('No result');
+    if (!result || !result.videoId || result.videoId.length !== 11) throw new Error('No valid result');
     
-    result.thumbnailUrl = `https://img.youtube.com/vi/${result.videoId}/hqdefault.jpg`;
-    if (!result.youtubeUrl) result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
-    
+    result.youtubeUrl = `https://www.youtube.com/watch?v=${result.videoId}`;
     showResult(result);
   } catch(e) {
     showStep('step-result');
     document.getElementById('result-title').textContent = 'Could not find a track. Please try again.';
     document.getElementById('result-channel').textContent = e.message || '';
-    document.getElementById('result-img').src = '';
+    document.getElementById('result-img').src = 'https://via.placeholder.com/320x180/1a1a35/ffe600?text=🎤+Try+Again';
     document.getElementById('result-link').href = '#';
   }
 }
