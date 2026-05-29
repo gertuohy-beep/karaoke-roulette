@@ -569,14 +569,27 @@ async function startSearch() {
   btn.disabled = true; btn.innerHTML = '<span class="search-spinner"></span>Searching…';
 
   try {
-    const typeLabel = selectedOption === 1 ? 'artist and song' : selectedOption === 2 ? 'artist or band' : 'song title';
-    const prompt = `Search YouTube for this ${typeLabel}: "${query}". 
+    let prompt;
+    if (selectedOption === 2) {
+      // Artist mode: return artist info with their genre, not a specific song
+      prompt = `Find the music artist or band: "${query}".
+Return ONLY a JSON array of up to 3 matching artists, each with:
+- artistName: the artist or band name
+- genre: their main music genre
+- videoId: YouTube video ID of one of their well-known official music videos
+- title: that video title
+- channelName: their YouTube channel name
+- thumbnailUrl: https://img.youtube.com/vi/{videoId}/hqdefault.jpg`;
+    } else {
+      const typeLabel = selectedOption === 1 ? 'artist and song' : 'song title';
+      prompt = `Search YouTube for this ${typeLabel}: "${query}". 
 Find the most relevant official music video or song. 
 Return ONLY a JSON array of up to 3 results, each with these fields:
 - videoId: the YouTube video ID (11-character string)
 - title: video title
 - channelName: channel name
 - thumbnailUrl: https://img.youtube.com/vi/{videoId}/hqdefault.jpg`;
+    }
 
     const results = await callClaudeJSON(prompt);
     if (!Array.isArray(results) || results.length === 0) throw new Error('No results found');
@@ -602,9 +615,16 @@ function showConfirm() {
     return;
   }
   const v = searchResults[currentResultIndex];
-  loadAndRenderThumb('confirm-thumb-wrap', v.channelName, v.title, false);
-  document.getElementById('confirm-title').textContent = v.title;
-  document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
+  if (selectedOption === 2) {
+    var dispName = v.artistName || v.channelName || v.title;
+    loadAndRenderThumb('confirm-thumb-wrap', dispName, null, false);
+    document.getElementById('confirm-title').textContent = dispName;
+    document.getElementById('confirm-channel').textContent = v.genre ? '🎵 ' + v.genre : '';
+  } else {
+    loadAndRenderThumb('confirm-thumb-wrap', v.channelName, v.title, false);
+    document.getElementById('confirm-title').textContent = v.title;
+    document.getElementById('confirm-channel').textContent = '📺 ' + (v.channelName || 'YouTube');
+  }
   setError('step2-error', '');
   showStep('step-confirm');
 }
@@ -685,7 +705,7 @@ const WILDCARDS = [
 async function findKaraokeTrack() {
   try {
     const v = confirmedVideo;
-    const originalArtist = v.channelName || v.title.split(' - ')[0] || v.title.split(' – ')[0];
+    const originalArtist = v.artistName || v.channelName || v.title.split(' - ')[0] || v.title.split(' – ')[0];
     seenArtists.push(originalArtist.toLowerCase());
 
     const wildcard = WILDCARDS[Math.floor(Math.random() * WILDCARDS.length)];
@@ -693,12 +713,17 @@ async function findKaraokeTrack() {
       ? `NEVER pick any of these artists (already seen): ${seenArtists.map(a => '"' + a + '"').join(', ')}.`
       : '';
 
-    const prompt = `You are a music expert running a Karaoke Roulette game. The user likes: "${v.title}".
+    // For option 2 (artist mode), base genre on the artist, not a specific song
+    const genreContext = (selectedOption === 2 && v.genre)
+      ? `The user selected the artist "${originalArtist}" who plays ${v.genre}.`
+      : `The user likes: "${v.title}" by ${originalArtist}.`;
+
+    const prompt = `You are a music expert running a Karaoke Roulette game. ${genreContext}
 TASK: Find a karaoke version of a DIFFERENT song by a COMPLETELY DIFFERENT artist, but in a similar genre/style.
 STRICT RULES:
 1. NEVER pick the same artist as "${originalArtist}".
 2. ${avoidList}
-3. The song MUST be in a similar genre/style/era to "${v.title}".
+3. The song MUST be in a similar genre/style/era to the music of "${originalArtist}".
 4. The result MUST be a karaoke version. Find it on YouTube.
 5. Nudge rule: ${wildcard}
 
@@ -861,13 +886,18 @@ function renderThumb(wrapId, imageUrl, isResult) {
   wrap.appendChild(img);
 }
 
+var _thumbGen = {};
 async function loadAndRenderThumb(wrapId, artistName, songTitle, isResult) {
   var wrap = document.getElementById(wrapId);
   if (!wrap) return;
+  _thumbGen[wrapId] = (_thumbGen[wrapId] || 0) + 1;
+  var myGen = _thumbGen[wrapId];
   var cls = isResult ? 'result-placeholder' : 'thumb-placeholder';
-  wrap.innerHTML = '<div class="' + cls + '" style="font-size:1.4rem;"><span class=\"search-spinner\"></span><span style=\"font-size:0.8rem;color:var(--text-dim)\">Loading…</span></div>';
+  wrap.innerHTML = '<div class="' + cls + '" style="font-size:1.4rem;"><span class="search-spinner"></span><span style="font-size:0.8rem;color:var(--text-dim)">Loading…</span></div>';
   var url = await fetchItunesImage(artistName, songTitle);
-  renderThumb(wrapId, url, isResult);
+  if (_thumbGen[wrapId] === myGen) {
+    renderThumb(wrapId, url, isResult);
+  }
 }
 </script>
 </body>
