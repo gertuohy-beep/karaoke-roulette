@@ -871,6 +871,7 @@ function renderThumb(wrapId, imageUrl, isResult) {
     wrap.innerHTML = '<div class="' + cls + '">\u{1F3A4}<span>No image found</span></div>';
     return;
   }
+  wrap.innerHTML = '';
   var img = document.createElement('img');
   img.alt = 'artist image';
   if (isResult) {
